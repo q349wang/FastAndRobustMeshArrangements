@@ -64,7 +64,7 @@ struct iEdge
 
 struct iTri
 {
-    iTri(const uint &_v0, const uint &_v1, const uint &_v2, const uint &_n) : node_id(_n)
+    iTri(const uint &_v0, const uint &_v1, const uint &_v2, const uint &_n) : info(_n)
     {
         v[0] = _v0;
         v[1] = _v1;
@@ -72,7 +72,7 @@ struct iTri
     }
 
     uint v[3];
-    uint node_id; // used only if the triangulation uses the Tree
+    uint info = 0; // used only if the triangulation uses the Tree
 };
 
 class FastTrimesh
@@ -121,6 +121,8 @@ class FastTrimesh
 
         inline bool edgeIsBoundary(const uint &e_id) const;
 
+        inline bool edgeIsManifold(const uint &e_id) const;
+
         inline const std::vector<uint> &adjE2T(const uint &e_id) const;
 
         inline void adjE2SortedTris(const uint &e_id, std::vector<uint> &sorted_tris,
@@ -156,6 +158,10 @@ class FastTrimesh
         inline uint triVertOffset(const uint &t_id, const uint &v_id) const;
 
         inline const std::bitset<NBIT> &triLabel(const uint &t_id) const;
+
+        inline void triSetVisited(const uint &t_id, const bool &vis);
+
+        inline bool triIsVisited(const uint &t_id) const;
 
 
         // MESH MANIPULATION

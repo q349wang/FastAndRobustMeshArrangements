@@ -242,6 +242,14 @@ inline bool FastTrimesh::edgeIsBoundary(const uint &e_id) const
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+inline bool FastTrimesh::edgeIsManifold(const uint &e_id) const
+{
+    assert(e_id < edges.size() && "edge id out of range");
+    return e2t[e_id].size() == 2;
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 inline const std::vector<uint> &FastTrimesh::adjE2T(const uint &e_id) const
 {
     assert(e_id < edges.size() && "edge id out of range");
@@ -366,7 +374,7 @@ inline int FastTrimesh::triEdgeID(const uint &t_id, const uint &off) const
 inline uint FastTrimesh::triNodeID(const uint &t_id) const
 {
     assert(t_id < triangles.size() && "tri id out of range");
-    return triangles[t_id].node_id;
+    return triangles[t_id].info;
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -374,7 +382,7 @@ inline uint FastTrimesh::triNodeID(const uint &t_id) const
 inline void FastTrimesh::setTriNodeID(const uint &t_id, const uint &n_id)
 {
     assert(t_id < triangles.size() && "tri id out of range");
-    triangles[t_id].node_id = n_id;
+    triangles[t_id].info = n_id;
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -477,6 +485,22 @@ inline const std::bitset<NBIT> &FastTrimesh::triLabel(const uint &t_id) const
 {
     assert(t_id < triangles.size() && "tri id out of range");
     return labels->at(t_id);
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+inline void FastTrimesh::triSetVisited(const uint &t_id, const bool &vis)
+{
+    assert(t_id < triangles.size() && "tri id out of range");
+    triangles[t_id].info = vis;
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+inline bool FastTrimesh::triIsVisited(const uint &t_id) const
+{
+    assert(t_id < triangles.size() && "tri id out of range");
+    return triangles[t_id].info;
 }
 
 
