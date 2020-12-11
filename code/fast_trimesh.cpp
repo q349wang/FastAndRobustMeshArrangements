@@ -251,7 +251,8 @@ inline const std::vector<uint> &FastTrimesh::adjE2T(const uint &e_id) const
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-inline void FastTrimesh::adjE2SortedTris(const uint &e_id, std::vector<uint> &sorted_tris, const uint &first_elem = 0) const
+inline void FastTrimesh::adjE2SortedTris(const uint &e_id, std::vector<uint> &sorted_tris,
+                                         const int &orientation, const uint &first_elem = 0) const
 {
     assert(e_id < edges.size() && "edge id out of range");
     uint ev0 = edgeVertID(e_id, 0);
@@ -304,6 +305,9 @@ inline void FastTrimesh::adjE2SortedTris(const uint &e_id, std::vector<uint> &so
         curr = next;
     }
     while(curr != first_elem);
+
+    if(orientation < 0)
+        std::reverse(sorted_tris.begin() + 1, sorted_tris.end());
 }
 
 /************************************************************************************************
