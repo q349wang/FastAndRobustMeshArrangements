@@ -39,6 +39,35 @@
 
 #include <unordered_set>
 
+inline FastTrimesh::FastTrimesh(const genericPoint *tv0, const genericPoint *tv1, const genericPoint *tv2, const uint *tv_id, const Plane &ref_p)
+{
+    addVert(tv0, tv_id[0]);
+    addVert(tv1, tv_id[1]);
+    addVert(tv2, tv_id[2]);
+    addTri(0, 1, 2);
+
+    triangle_plane = ref_p;
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+inline FastTrimesh::FastTrimesh(const std::vector<genericPoint *> &in_verts, const std::vector<uint> &in_tris,
+                                const std::vector<std::bitset<NBIT> > *in_labels) : labels(in_labels)
+{
+    vertices.reserve(in_verts.size());
+    edges.reserve(in_verts.size() / 2);
+    triangles.reserve(in_tris.size() / 3);
+    v2e.reserve(in_verts.size());
+
+    for(auto &v : in_verts) addVert(v);
+
+    for(uint t_id = 0; t_id < in_tris.size() / 3; t_id++)
+        addTri(in_tris[3 * t_id], in_tris[3 * t_id + 1], in_tris[3 * t_id + 2]);
+
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 inline void FastTrimesh::preAllocateSpace(const uint &estimated_num_verts)
 {
     vertices.reserve(estimated_num_verts);
@@ -381,6 +410,14 @@ inline uint FastTrimesh::triVertOffset(const uint &t_id, const uint &v_id) const
     return 0; // warning killer
 }
 
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+inline const std::bitset<NBIT> &FastTrimesh::triLabel(const uint &t_id) const
+{
+    assert(t_id < triangles.size() && "tri id out of range");
+    return labels->at(t_id);
+}
+
 
 /************************************************************************************************
  *          MESH MANIPULATION
@@ -395,6 +432,14 @@ inline uint FastTrimesh::addVert(const genericPoint *v, const uint &orig_v_id)
     rev_vtx_map[orig_v_id] = v_id;
 
     return v_id;
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+inline void FastTrimesh::addVert(const genericPoint *v)
+{
+    vertices.emplace_back(v, 0);
+    v2e.push_back(std::vector<uint>());
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

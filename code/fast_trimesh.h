@@ -81,16 +81,10 @@ class FastTrimesh
 
         inline FastTrimesh(){}
 
-        inline FastTrimesh(const genericPoint* tv0, const genericPoint* tv1, const genericPoint *tv2,
-                    const uint *tv_id, const Plane &ref_p)
-        {
-            addVert(tv0, tv_id[0]);
-            addVert(tv1, tv_id[1]);
-            addVert(tv2, tv_id[2]);
-            addTri(0, 1, 2);
+        inline FastTrimesh(const genericPoint* tv0, const genericPoint* tv1, const genericPoint *tv2, const uint *tv_id, const Plane &ref_p);
 
-            triangle_plane = ref_p;
-        }
+        inline FastTrimesh(const std::vector<genericPoint*> &in_verts, const std::vector<uint> &in_tris, const std::vector< std::bitset<NBIT> > *in_labels);
+
 
         inline void preAllocateSpace(const uint &estimated_num_verts);
 
@@ -158,9 +152,13 @@ class FastTrimesh
 
         inline uint triVertOffset(const uint &t_id, const uint &v_id) const;
 
+        inline const std::bitset<NBIT> &triLabel(const uint &t_id) const;
+
 
         // MESH MANIPULATION
         inline uint addVert(const genericPoint *v, const uint &orig_v_id);
+
+        inline void addVert(const genericPoint *v);
 
         inline uint addTri(const uint &tv0_id, const uint &tv1_id, const uint &tv2_id);
 
@@ -190,6 +188,8 @@ class FastTrimesh
         std::unordered_map<uint, uint> rev_vtx_map;
 
         Plane triangle_plane;
+
+        const std::vector<std::bitset<NBIT> > *labels = nullptr; //only for booleans
 
         // PRIVATE METHODS
         inline int addEdge(const uint &ev0_id, const uint &ev1_id);
