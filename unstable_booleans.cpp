@@ -35,62 +35,6 @@
  *                                                                                       *
  * ***************************************************************************************/
 
-#include <iostream>
-
-#include "solve_intersections.h"
-#include "io_functions.h"
-
-#include <QApplication>
-#include <cinolib/gui/qt/qt_gui_tools.h>
-
 #include "unstable_booleans.h"
-
-//::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-int main(int argc, char **argv)
-{
-    QApplication a(argc, argv);
-
-    std::string filename;
-
-    if(argc > 1)
-        filename = argv[1];
-    else
-    {
-//        std::cout << "input file missing" << std::endl;
-//        return -1;
-        filename = "/Users/gianmarco/Documents/Unica/MeshArrangements-Dev/FastAndRobustMeshArrangements/data/two_spheres.stl";
-    }
-
-    std::vector<double> in_coords, out_coords;
-    std::vector<uint> in_tris, out_tris;
-    std::vector<genericPoint*> gen_points;
-
-    //load(filename, in_coords, in_tris);
-
-    /*-------------------------------------------------------------------
-     * There are 4 versions of the solveIntersections function. Please
-     * refer to the solve_intersections.h file to see how to use them. */
-
-    //solveIntersections(in_coords, in_tris, gen_points, out_tris);
-    //computeApproximateCoordinates(gen_points, out_coords);
-    //freePointsMemory(gen_points);
-    //save("output.obj", out_coords, out_tris);
-
-    loadMultipleFiles()
-
-    cinolib::DrawableTrimesh<> m(out_coords, out_tris);
-
-    cinolib::GLcanvas gui;
-    gui.push_obj(&m);
-    gui.show();
-
-    // CMD+1 to show tri-mesh controls.
-    cinolib::SurfaceMeshControlPanel<cinolib::DrawableTrimesh<>> panel(&m, &gui);
-    QApplication::connect(new QShortcut(QKeySequence(Qt::CTRL+Qt::Key_1), &gui), &QShortcut::activated, [&](){panel.show();});
-
-    return a.exec();
-}
-
 
 
