@@ -123,6 +123,8 @@ class FastTrimesh
 
         inline const std::vector<uint> &adjE2T(const uint &e_id) const;
 
+        inline void adjE2SortedTris(const uint &e_id, std::vector<uint> &sorted_tris, const uint &first_elem) const;
+
         // TRIANGLES
         inline const uint *tri(const uint &t_id) const;
 

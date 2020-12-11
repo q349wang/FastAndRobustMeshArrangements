@@ -249,6 +249,63 @@ inline const std::vector<uint> &FastTrimesh::adjE2T(const uint &e_id) const
     return e2t[e_id];
 }
 
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+inline void FastTrimesh::adjE2SortedTris(const uint &e_id, std::vector<uint> &sorted_tris, const uint &first_elem = 0) const
+{
+    assert(e_id < edges.size() && "edge id out of range");
+    uint ev0 = edgeVertID(e_id, 0);
+    uint ev1 = edgeVertID(e_id, 1);
+
+    std::vector<uint> adj_tris = adjE2T(e_id);
+    std::vector<const genericPoint*> opp_verts(adj_tris.size());
+
+    for(uint t_id = 0; t_id < adj_tris.size(); t_id++)
+        opp_verts[t_id] = vert(triVertOppositeTo(adj_tris[t_id], ev0, ev1));
+
+
+    sorted_tris.clear();
+    uint curr = first_elem;
+    do
+    {
+        sorted_tris.push_back(curr);
+
+        // find all elements in the positive half space w.r.t. curr
+        std::vector<uint> next_pool;
+        for(uint i = 0; i < opp_verts.size(); ++i)
+        {
+            if(i != curr && genericPoint::orient3D(*vert(ev0), *vert(ev1), *opp_verts.at(curr), *opp_verts.at(i)) > 0)
+            {
+                next_pool.push_back(i);
+            }
+        }
+
+        // find element in next_pool that has all other elements in its positive half space
+        uint next = curr;
+        for(uint j = 0; j < next_pool.size(); ++j)
+        {
+            bool leftmost = true;
+            for(uint k = 0; k < next_pool.size(); ++k)
+            {
+                if(j == k) continue;
+                if(genericPoint::orient3D(*vert(ev0), *vert(ev1), *opp_verts.at(next_pool.at(j)), *opp_verts.at(next_pool.at(k))) < 0)
+                {
+                    leftmost = false;
+                    break;
+                }
+            }
+            if(leftmost)
+            {
+                next = next_pool.at(j);
+                break;
+            }
+        }
+        assert(next != curr);
+        curr = next;
+    }
+    while(curr != first_elem);
+}
+
 /************************************************************************************************
  *          TRIANGLES
  * *********************************************************************************************/
