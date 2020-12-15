@@ -253,16 +253,17 @@ inline bool FastTrimesh::edgeIsManifold(const uint &e_id) const
 inline const std::vector<uint> &FastTrimesh::adjE2T(const uint &e_id) const
 {
     assert(e_id < edges.size() && "edge id out of range");
-    assert(e2t[e_id].size() <= 2 && "edge-triangle adj > 2 in manifold mesh");
     return e2t[e_id];
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-inline void FastTrimesh::adjE2SortedTris(const uint &e_id, std::vector<uint> &sorted_tris,
-                                         const int &orientation, const uint &first_elem = 0) const
+inline std::vector<uint> FastTrimesh::adjE2SortedTris(const uint &e_id, const int &orientation, const uint &first_elem = 0) const
 {
     assert(e_id < edges.size() && "edge id out of range");
+
+    std::vector<uint> sorted_tris;
+
     uint ev0 = edgeVertID(e_id, 0);
     uint ev1 = edgeVertID(e_id, 1);
 
@@ -314,8 +315,14 @@ inline void FastTrimesh::adjE2SortedTris(const uint &e_id, std::vector<uint> &so
     }
     while(curr != first_elem);
 
+
+    for(auto &p : sorted_tris) //chaning ids with effective tri ids
+        p = adj_tris[p];
+
     if(orientation < 0)
         std::reverse(sorted_tris.begin() + 1, sorted_tris.end());
+
+    return sorted_tris;
 }
 
 /************************************************************************************************
@@ -501,6 +508,14 @@ inline bool FastTrimesh::triIsVisited(const uint &t_id) const
 {
     assert(t_id < triangles.size() && "tri id out of range");
     return triangles[t_id].info;
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+inline bool FastTrimesh::triLabelContainsBit(const uint &t_id, const uint &bit) const
+{
+    assert(t_id < triangles.size() && "tri id out of range");
+    return labels[t_id][bit] == 1;
 }
 
 

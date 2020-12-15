@@ -125,8 +125,7 @@ class FastTrimesh
 
         inline const std::vector<uint> &adjE2T(const uint &e_id) const;
 
-        inline void adjE2SortedTris(const uint &e_id, std::vector<uint> &sorted_tris,
-                                    const int &orientation, const uint &first_elem) const;
+        inline std::vector<uint> adjE2SortedTris(const uint &e_id, const int &orientation, const uint &first_elem) const;
 
         // TRIANGLES
         inline const uint *tri(const uint &t_id) const;
@@ -162,6 +161,8 @@ class FastTrimesh
         inline void triSetVisited(const uint &t_id, const bool &vis);
 
         inline bool triIsVisited(const uint &t_id) const;
+
+        inline bool triLabelContainsBit(const uint &t_id, const uint &bit) const;
 
 
         // MESH MANIPULATION
