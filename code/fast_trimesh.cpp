@@ -258,21 +258,37 @@ inline const std::vector<uint> &FastTrimesh::adjE2T(const uint &e_id) const
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+inline void FastTrimesh::edgeSetVisited(const uint &e_id, const bool &vis)
+{
+    assert(e_id < edges.size() && "edge id out of range");
+    edges[e_id].constr = vis;
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+inline bool FastTrimesh::edgeIsVisited(const uint &e_id) const
+{
+    assert(e_id < edges.size() && "edge id out of range");
+    return edges[e_id].constr;
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 inline std::vector<uint> FastTrimesh::adjE2SortedTris(const uint &e_id, const int &orientation, const uint &first_elem = 0) const
 {
     assert(e_id < edges.size() && "edge id out of range");
 
     std::vector<uint> sorted_tris;
 
-    uint ev0 = edgeVertID(e_id, 0);
-    uint ev1 = edgeVertID(e_id, 1);
+    const std::vector<uint> &adj_tris = adjE2T(e_id);
+    assert(first_elem < adj_tris.size() && "out of range first element");
 
-    std::vector<uint> adj_tris = adjE2T(e_id);
     std::vector<const genericPoint*> opp_verts(adj_tris.size());
 
-    for(uint t_id = 0; t_id < adj_tris.size(); t_id++)
-        opp_verts[t_id] = vert(triVertOppositeTo(adj_tris[t_id], ev0, ev1));
+    std::pair<uint, uint> e = sortEdgeEndpointsOnTriangle(e_id, adj_tris[first_elem]);
 
+    for(uint t_id = 0; t_id < adj_tris.size(); t_id++)
+        opp_verts[t_id] = vert(triVertOppositeTo(adj_tris[t_id], e.first, e.second));
 
     sorted_tris.clear();
     uint curr = first_elem;
@@ -284,7 +300,7 @@ inline std::vector<uint> FastTrimesh::adjE2SortedTris(const uint &e_id, const in
         std::vector<uint> next_pool;
         for(uint i = 0; i < opp_verts.size(); ++i)
         {
-            if(i != curr && genericPoint::orient3D(*vert(ev0), *vert(ev1), *opp_verts.at(curr), *opp_verts.at(i)) > 0)
+            if(i != curr && genericPoint::orient3D(*vert(e.first), *vert(e.second), *opp_verts.at(curr), *opp_verts.at(i)) > 0)
             {
                 next_pool.push_back(i);
             }
@@ -298,7 +314,7 @@ inline std::vector<uint> FastTrimesh::adjE2SortedTris(const uint &e_id, const in
             for(uint k = 0; k < next_pool.size(); ++k)
             {
                 if(j == k) continue;
-                if(genericPoint::orient3D(*vert(ev0), *vert(ev1), *opp_verts.at(next_pool.at(j)), *opp_verts.at(next_pool.at(k))) < 0)
+                if(genericPoint::orient3D(*vert(e.first), *vert(e.second), *opp_verts.at(next_pool.at(j)), *opp_verts.at(next_pool.at(k))) < 0)
                 {
                     leftmost = false;
                     break;
@@ -830,5 +846,29 @@ inline void FastTrimesh::removeTriUnref(const uint &t_id)
 {
     triSwitch(t_id, static_cast<uint>(triangles.size() -1));
     triangles.pop_back();
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+inline std::pair<uint, uint> FastTrimesh::sortEdgeEndpointsOnTriangle(const uint &e_id, const uint &t_id) const
+{
+    assert(e_id < numEdges() && "out of bounds edge id");
+    assert(t_id < numTris() && "out of bounds tri id");
+
+    const std::pair<uint, uint> &e = edges[e_id].v;
+    const uint *t = triangles[t_id].v;
+
+    for(uint i = 0; i < 3; i++)
+    {
+        if(t[i] == e.first)
+        {
+            if(t[(i+1) % 3] == e.second)
+                return std::make_pair(e.first, e.second);
+            else
+                return std::make_pair(e.second, e.first);
+        }
+    }
+
+    assert(false && "triangle does not contain edge");
 }
 

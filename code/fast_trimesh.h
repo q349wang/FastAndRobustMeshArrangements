@@ -125,7 +125,12 @@ class FastTrimesh
 
         inline const std::vector<uint> &adjE2T(const uint &e_id) const;
 
+        inline void edgeSetVisited(const uint &e_id, const bool &vis);
+
+        inline bool edgeIsVisited(const uint &e_id) const;
+
         inline std::vector<uint> adjE2SortedTris(const uint &e_id, const int &orientation, const uint &first_elem) const;
+
 
         // TRIANGLES
         inline const uint *tri(const uint &t_id) const;
@@ -217,6 +222,8 @@ class FastTrimesh
         inline void removeEdgeUnref(const uint &e_id);
 
         inline void removeTriUnref(const uint &t_id);
+
+        inline std::pair<uint, uint> sortEdgeEndpointsOnTriangle(const uint &e_id, const uint &t_id) const;
 
 };
 
