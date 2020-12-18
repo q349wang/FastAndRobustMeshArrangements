@@ -42,6 +42,9 @@
 #include <fstream>
 #include <chrono>
 
+#include "indirect_predicates.h"
+#include <cinolib/meshes/trimesh.h>
+
 inline std::string ts(const double &n)
 {
     std::string s = std::to_string(n);
@@ -98,6 +101,78 @@ inline double stopChrono(std::chrono::time_point<std::chrono::system_clock> &sta
     return std::chrono::duration <double, std::milli> (time).count() / 1000;
 }
 
+inline void printGenericPoint(const genericPoint &p)
+{
+    if(p.isExplicit3D())
+    {
+        explicitPoint3D ep = p.toExplicit3D();
+        std::cout << "EXP: (" << ep.X() << ", " << ep.Y() << ", " << ep.Z() << ")" << std::endl;
+    }
+    else if(p.isLPI())
+    {
+        implicitPoint3D_LPI ip = p.toLPI();
+        double x, y, z;
+        ip.getApproxXYZCoordinates(x, y, z);
+        std::cout << "LPI: (" << x << ", " << y << ", " << z << ")" << std::endl;
+    }
+    else if(p.isTPI())
+    {
+        implicitPoint3D_TPI ip = p.toTPI();
+        double x, y, z;
+        ip.getApproxXYZCoordinates(x, y, z);
+        std::cout << "TPI: (" << x << ", " << y << ", " << z << ")" << std::endl;
+    }
+}
+
+inline cinolib::vec3d genericPointToCinolib(const genericPoint &p)
+{
+    if(p.isExplicit3D())
+    {
+        explicitPoint3D ep = p.toExplicit3D();
+        return cinolib::vec3d(ep.X(), ep.Y(), ep.Z());
+    }
+    else if(p.isLPI())
+    {
+        implicitPoint3D_LPI ip = p.toLPI();
+        double x, y, z;
+        ip.getApproxXYZCoordinates(x, y, z);
+        return cinolib::vec3d(x, y, z);
+    }
+    else if(p.isTPI())
+    {
+        implicitPoint3D_TPI ip = p.toTPI();
+        double x, y, z;
+        ip.getApproxXYZCoordinates(x, y, z);
+        return cinolib::vec3d(x, y, z);
+    }
+    return cinolib::vec3d(0,0,0); // warning killer
+}
+
+
+inline explicitPoint3D genericPointToExplicit(const genericPoint &p)
+{
+    if(p.isExplicit3D())
+    {
+        explicitPoint3D ep = p.toExplicit3D();
+        return ep;
+    }
+    else if(p.isLPI())
+    {
+        implicitPoint3D_LPI ip = p.toLPI();
+        double x, y, z;
+        ip.getApproxXYZCoordinates(x, y, z);
+        return explicitPoint3D(x, y, z);
+    }
+    else if(p.isTPI())
+    {
+        implicitPoint3D_TPI ip = p.toTPI();
+        double x, y, z;
+        ip.getApproxXYZCoordinates(x, y, z);
+        return explicitPoint3D(x, y, z);
+    }
+
+    return explicitPoint3D(0,0,0); // warning killer
+}
 
 
 
