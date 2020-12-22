@@ -83,7 +83,7 @@ class FastTrimesh
 
         inline FastTrimesh(const genericPoint* tv0, const genericPoint* tv1, const genericPoint *tv2, const uint *tv_id, const Plane &ref_p);
 
-        inline FastTrimesh(const std::vector<genericPoint*> &in_verts, const std::vector<uint> &in_tris, const std::vector< std::bitset<NBIT> > *in_labels);
+        inline FastTrimesh(const std::vector<genericPoint*> &in_verts, const std::vector<uint> &in_tris);
 
 
         inline void preAllocateSpace(const uint &estimated_num_verts);
@@ -129,8 +129,6 @@ class FastTrimesh
 
         inline bool edgeIsVisited(const uint &e_id) const;
 
-        inline std::vector<uint> adjE2SortedTris(const uint &e_id, const int &orientation, const uint &first_elem) const;
-
 
         // TRIANGLES
         inline const uint *tri(const uint &t_id) const;
@@ -161,13 +159,9 @@ class FastTrimesh
 
         inline uint triVertOffset(const uint &t_id, const uint &v_id) const;
 
-        inline const std::bitset<NBIT> &triLabel(const uint &t_id) const;
-
         inline void triSetVisited(const uint &t_id, const bool &vis);
 
         inline bool triIsVisited(const uint &t_id) const;
-
-        inline bool triLabelContainsBit(const uint &t_id, const uint &bit) const;
 
 
         // MESH MANIPULATION
@@ -191,6 +185,8 @@ class FastTrimesh
 
         inline void splitTri(const uint &t_id, const uint &v_id, Tree &tree);
 
+        inline void flipTri(const uint &t_id);
+
 
     private:
         std::vector<iVtx>    vertices;
@@ -203,8 +199,6 @@ class FastTrimesh
         std::unordered_map<uint, uint> rev_vtx_map;
 
         Plane triangle_plane;
-
-        const std::vector<std::bitset<NBIT> > *labels = nullptr; //only for booleans
 
         // PRIVATE METHODS
         inline int addEdge(const uint &ev0_id, const uint &ev1_id);
@@ -222,9 +216,6 @@ class FastTrimesh
         inline void removeEdgeUnref(const uint &e_id);
 
         inline void removeTriUnref(const uint &t_id);
-
-        inline std::pair<uint, uint> sortEdgeEndpointsOnTriangle(const uint &e_id, const uint &t_id) const;
-
 };
 
 #include "fast_trimesh.cpp"

@@ -51,8 +51,7 @@ inline FastTrimesh::FastTrimesh(const genericPoint *tv0, const genericPoint *tv1
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-inline FastTrimesh::FastTrimesh(const std::vector<genericPoint *> &in_verts, const std::vector<uint> &in_tris,
-                                const std::vector<std::bitset<NBIT> > *in_labels) : labels(in_labels)
+inline FastTrimesh::FastTrimesh(const std::vector<genericPoint *> &in_verts, const std::vector<uint> &in_tris)
 {
     vertices.reserve(in_verts.size());
     edges.reserve(in_verts.size() / 2);
@@ -272,74 +271,6 @@ inline bool FastTrimesh::edgeIsVisited(const uint &e_id) const
     return edges[e_id].constr;
 }
 
-//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-inline std::vector<uint> FastTrimesh::adjE2SortedTris(const uint &e_id, const int &orientation, const uint &first_elem = 0) const
-{
-    assert(e_id < edges.size() && "edge id out of range");
-
-    std::vector<uint> sorted_tris;
-
-    const std::vector<uint> &adj_tris = adjE2T(e_id);
-    assert(first_elem < adj_tris.size() && "out of range first element");
-
-    std::vector<const genericPoint*> opp_verts(adj_tris.size());
-
-    std::pair<uint, uint> e = sortEdgeEndpointsOnTriangle(e_id, adj_tris[first_elem]);
-
-    for(uint t_id = 0; t_id < adj_tris.size(); t_id++)
-        opp_verts[t_id] = vert(triVertOppositeTo(adj_tris[t_id], e.first, e.second));
-
-    sorted_tris.clear();
-    uint curr = first_elem;
-    do
-    {
-        sorted_tris.push_back(curr);
-
-        // find all elements in the positive half space w.r.t. curr
-        std::vector<uint> next_pool;
-        for(uint i = 0; i < opp_verts.size(); ++i)
-        {
-            if(i != curr && genericPoint::orient3D(*vert(e.first), *vert(e.second), *opp_verts.at(curr), *opp_verts.at(i)) > 0)
-            {
-                next_pool.push_back(i);
-            }
-        }
-
-        // find element in next_pool that has all other elements in its positive half space
-        uint next = curr;
-        for(uint j = 0; j < next_pool.size(); ++j)
-        {
-            bool leftmost = true;
-            for(uint k = 0; k < next_pool.size(); ++k)
-            {
-                if(j == k) continue;
-                if(genericPoint::orient3D(*vert(e.first), *vert(e.second), *opp_verts.at(next_pool.at(j)), *opp_verts.at(next_pool.at(k))) < 0)
-                {
-                    leftmost = false;
-                    break;
-                }
-            }
-            if(leftmost)
-            {
-                next = next_pool.at(j);
-                break;
-            }
-        }
-        assert(next != curr);
-        curr = next;
-    }
-    while(curr != first_elem);
-
-
-    for(auto &p : sorted_tris) //chaning ids with effective tri ids
-        p = adj_tris[p];
-
-    if(orientation < 0)
-        std::reverse(sorted_tris.begin() + 1, sorted_tris.end());
-
-    return sorted_tris;
-}
 
 /************************************************************************************************
  *          TRIANGLES
@@ -504,14 +435,6 @@ inline uint FastTrimesh::triVertOffset(const uint &t_id, const uint &v_id) const
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-inline const std::bitset<NBIT> &FastTrimesh::triLabel(const uint &t_id) const
-{
-    assert(t_id < triangles.size() && "tri id out of range");
-    return labels->at(t_id);
-}
-
-//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
 inline void FastTrimesh::triSetVisited(const uint &t_id, const bool &vis)
 {
     assert(t_id < triangles.size() && "tri id out of range");
@@ -525,15 +448,6 @@ inline bool FastTrimesh::triIsVisited(const uint &t_id) const
     assert(t_id < triangles.size() && "tri id out of range");
     return triangles[t_id].info;
 }
-
-//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-inline bool FastTrimesh::triLabelContainsBit(const uint &t_id, const uint &bit) const
-{
-    assert(t_id < triangles.size() && "tri id out of range");
-    return labels[t_id][bit] == 1;
-}
-
 
 /************************************************************************************************
  *          MESH MANIPULATION
@@ -726,6 +640,17 @@ inline void FastTrimesh::splitTri(const uint &t_id, const uint &v_id, Tree &tree
     removeTri(t_id);
 }
 
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+inline void FastTrimesh::flipTri(const uint &t_id)
+{
+    assert(t_id < triangles.size() && "tri id out of range");
+
+    uint tmp_v = triangles[t_id].v[0];
+    triangles[t_id].v[1] = triangles[t_id].v[2];
+    triangles[t_id].v[2] = tmp_v;
+}
+
 /***********************************************************************************************
  *          PRIVATE METHODS
  * ********************************************************************************************/
@@ -848,27 +773,4 @@ inline void FastTrimesh::removeTriUnref(const uint &t_id)
     triangles.pop_back();
 }
 
-//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-inline std::pair<uint, uint> FastTrimesh::sortEdgeEndpointsOnTriangle(const uint &e_id, const uint &t_id) const
-{
-    assert(e_id < numEdges() && "out of bounds edge id");
-    assert(t_id < numTris() && "out of bounds tri id");
-
-    const std::pair<uint, uint> &e = edges[e_id].v;
-    const uint *t = triangles[t_id].v;
-
-    for(uint i = 0; i < 3; i++)
-    {
-        if(t[i] == e.first)
-        {
-            if(t[(i+1) % 3] == e.second)
-                return std::make_pair(e.first, e.second);
-            else
-                return std::make_pair(e.second, e.first);
-        }
-    }
-
-    assert(false && "triangle does not contain edge");
-}
 
