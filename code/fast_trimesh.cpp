@@ -644,10 +644,11 @@ inline void FastTrimesh::splitTri(const uint &t_id, const uint &v_id, Tree &tree
 
 inline void FastTrimesh::flipTri(const uint &t_id)
 {
+    assert(false && "REMOVE ME");
     assert(t_id < triangles.size() && "tri id out of range");
 
     uint tmp_v = triangles[t_id].v[0];
-    triangles[t_id].v[1] = triangles[t_id].v[2];
+    triangles[t_id].v[0] = triangles[t_id].v[2];
     triangles[t_id].v[2] = tmp_v;
 }
 
