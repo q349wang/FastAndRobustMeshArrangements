@@ -78,6 +78,14 @@ inline void FastTrimesh::preAllocateSpace(const uint &estimated_num_verts)
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+inline void FastTrimesh::resetTrianglesInfo()
+{
+    for(uint t_id = 0; t_id < numTris(); t_id++)
+        triangles[t_id].info = 0;
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 inline uint FastTrimesh::numVerts() const
 {
     return static_cast<uint>(vertices.size());
@@ -435,18 +443,18 @@ inline uint FastTrimesh::triVertOffset(const uint &t_id, const uint &v_id) const
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-inline void FastTrimesh::triSetVisited(const uint &t_id, const bool &vis)
+inline uint FastTrimesh::triInfo(const uint &t_id) const
 {
     assert(t_id < triangles.size() && "tri id out of range");
-    triangles[t_id].info = vis;
+    return triangles[t_id].info;
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-inline bool FastTrimesh::triIsVisited(const uint &t_id) const
+inline void FastTrimesh::setTriInfo(const uint &t_id, const uint &val)
 {
     assert(t_id < triangles.size() && "tri id out of range");
-    return triangles[t_id].info;
+    triangles[t_id].info = val;
 }
 
 /************************************************************************************************
@@ -644,12 +652,11 @@ inline void FastTrimesh::splitTri(const uint &t_id, const uint &v_id, Tree &tree
 
 inline void FastTrimesh::flipTri(const uint &t_id)
 {
-    assert(false && "REMOVE ME");
     assert(t_id < triangles.size() && "tri id out of range");
 
-    uint tmp_v = triangles[t_id].v[0];
+    uint tmp = triangles[t_id].v[0];
     triangles[t_id].v[0] = triangles[t_id].v[2];
-    triangles[t_id].v[2] = tmp_v;
+    triangles[t_id].v[2] = tmp;
 }
 
 /***********************************************************************************************

@@ -37,6 +37,8 @@
 
 #include "io_functions.h"
 
+#include <cinolib/octree.h>
+
 
 inline void load(const std::string &filename, std::vector<double> &coords, std::vector<uint> &tris)
 {
@@ -92,6 +94,71 @@ inline void loadMultipleFiles(const std::vector<std::string> &files, std::vector
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+inline void loadMultipleFilesWithVertFix(const std::vector<std::string> &files, std::vector<double> &coords, std::vector<uint> &tris, std::vector<uint> &labels)
+{
+    for(uint f_id = 0; f_id < files.size(); f_id++)
+    {
+        cinolib::Trimesh<> tm(files[f_id].c_str());
+
+        fixCoincidentVertices(tm);
+
+        uint off = static_cast<uint>(coords.size() / 3); // prev num verts
+
+        for(cinolib::vec3d &v : tm.vector_verts())
+        {
+            coords.push_back(v.x());
+            coords.push_back(v.y());
+            coords.push_back(v.z());
+        }
+
+        for(auto &t : tm.vector_polys())
+        {
+            tris.push_back(t[0] + off);
+            tris.push_back(t[1] + off);
+            tris.push_back(t[2] + off);
+        }
+
+        for(uint t_id = 0; t_id < tm.num_polys(); t_id++)
+            labels.push_back(f_id);
+    }
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+inline void fixCoincidentVertices(cinolib::Trimesh<> &m)
+{
+    m.vert_set_flag(cinolib::MARKED, false);
+
+    cinolib::Octree o;
+    double r = m.edge_avg_length() * 0.01;
+
+    for(uint v_id = 0; v_id < m.num_verts(); ++v_id)
+        o.push_sphere(v_id, m.vert(v_id), r);
+
+    o.build();
+
+    for(uint v_id = 0; v_id < m.num_verts(); ++v_id)
+    {
+        cinolib::vec3d p = m.vert(v_id);
+        std::unordered_set<uint> ids;
+        o.contains(p, false, ids);
+        if(ids.size() > 1)
+        {
+            for(uint id : ids)
+                m.vert_data(id).flags[cinolib::MARKED] = true;
+        }
+    }
+
+    for(uint v_id = 0; v_id < m.num_verts(); ++v_id)
+    {
+        if(m.vert_data(v_id).flags[cinolib::MARKED])
+            m.vert(v_id) += m.vert_data(v_id).normal * r *2.0;
+    }
+
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 inline void save(const std::string &filename, std::vector<double> &coords, std::vector<uint> &tris)
 {
     std::string filetype = filename.substr(filename.size() - 4, 4);
@@ -111,5 +178,9 @@ inline void save(const std::string &filename, std::vector<double> &coords, std::
         std::cerr << "ERROR: file format not supported yet " << std::endl;
     }
 }
+
+
+
+
 
 

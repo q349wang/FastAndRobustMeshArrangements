@@ -40,6 +40,8 @@
 
 #include <cinolib/vector_serialization.h>
 
+#include <cinolib/meshes/trimesh.h>
+
 #include <cinolib/io/read_OFF.h>
 #include <cinolib/io/read_OBJ.h>
 #include <cinolib/io/read_STL.h>
@@ -51,6 +53,10 @@
 inline void load(const std::string &filename, std::vector<double> &coords, std::vector<uint> &tris);
 
 inline void loadMultipleFiles(const std::vector<std::string> &files, std::vector<double> &coords, std::vector<uint> &tris, std::vector<uint> &labels);
+
+inline void loadMultipleFilesWithVertFix(const std::vector<std::string> &files, std::vector<double> &coords, std::vector<uint> &tris, std::vector<uint> &labels);
+
+inline void fixCoincidentVertices(cinolib::Trimesh<> &m);
 
 inline void save(const std::string &filename, std::vector<double> &coords, std::vector<uint> &tris);
 

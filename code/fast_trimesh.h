@@ -72,7 +72,7 @@ struct iTri
     }
 
     uint v[3];
-    uint info = 0; // used only if the triangulation uses the Tree
+    uint info = 0;
 };
 
 class FastTrimesh
@@ -87,6 +87,8 @@ class FastTrimesh
 
 
         inline void preAllocateSpace(const uint &estimated_num_verts);
+
+        inline void resetTrianglesInfo();
 
         inline uint numVerts() const;
         inline uint numEdges() const;
@@ -159,10 +161,9 @@ class FastTrimesh
 
         inline uint triVertOffset(const uint &t_id, const uint &v_id) const;
 
-        inline void triSetVisited(const uint &t_id, const bool &vis);
+        inline uint triInfo(const uint &t_id) const;
 
-        inline bool triIsVisited(const uint &t_id) const;
-
+        inline void setTriInfo(const uint &t_id, const uint &val);
 
         // MESH MANIPULATION
         inline uint addVert(const genericPoint *v, const uint &orig_v_id);
