@@ -153,6 +153,8 @@ class FastTrimesh
 
         inline std::vector<uint> adjT2E(const uint &t_id) const;
 
+        inline std::vector<uint> adjT2T(const uint &t_id) const;
+
         inline bool triVertsAreCCW(const uint &t_id, const uint &curr_v_id, const uint &prev_v_id) const;
 
         inline int triOrientation(const uint &t_id) const;

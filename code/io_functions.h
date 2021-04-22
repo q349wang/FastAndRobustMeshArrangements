@@ -60,6 +60,7 @@ inline void fixCoincidentVertices(cinolib::Trimesh<> &m);
 
 inline void save(const std::string &filename, std::vector<double> &coords, std::vector<uint> &tris);
 
+
 #include "io_functions.cpp"
 
 #endif // IO_FUNCTIONS_H

@@ -397,6 +397,25 @@ inline std::vector<uint> FastTrimesh::adjT2E(const uint &t_id) const
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+inline std::vector<uint> FastTrimesh::adjT2T(const uint &t_id) const
+{
+    assert(t_id < triangles.size() && "tri id out of range");
+    std::vector<uint> res;
+
+    for(uint e_id : adjT2E(t_id))
+    {
+        for(uint nbr_t : adjE2T(e_id))
+        {
+            if(nbr_t != t_id)
+                res.push_back(nbr_t);
+        }
+    }
+
+    return res;
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 inline bool FastTrimesh::triVertsAreCCW(const uint &t_id, const uint &curr_v_id, const uint &prev_v_id) const
 {
     uint prev_off = triVertOffset(t_id, prev_v_id);

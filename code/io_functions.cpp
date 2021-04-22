@@ -39,7 +39,6 @@
 
 #include <cinolib/octree.h>
 
-
 inline void load(const std::string &filename, std::vector<double> &coords, std::vector<uint> &tris)
 {
     std::vector<cinolib::vec3d> tmp_verts;
@@ -152,7 +151,7 @@ inline void fixCoincidentVertices(cinolib::Trimesh<> &m)
     for(uint v_id = 0; v_id < m.num_verts(); ++v_id)
     {
         if(m.vert_data(v_id).flags[cinolib::MARKED])
-            m.vert(v_id) += m.vert_data(v_id).normal * r *2.0;
+            m.vert(v_id) += m.vert_data(v_id).normal * r * 2.0;
     }
 
 }
@@ -178,9 +177,5 @@ inline void save(const std::string &filename, std::vector<double> &coords, std::
         std::cerr << "ERROR: file format not supported yet " << std::endl;
     }
 }
-
-
-
-
 
 
