@@ -115,6 +115,7 @@ inline void triangulateSingleTriangle(TriangleSoup &ts, FastTrimesh &subm, const
     else
         splitSingleTriangleWithTree(ts, subm, t_points);
 
+
     /*:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
      *                                  EDGE SPLIT
      * :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::*/

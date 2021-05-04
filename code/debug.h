@@ -45,6 +45,13 @@
 #include "indirect_predicates.h"
 #include <cinolib/meshes/trimesh.h>
 
+std::string to_string_prec( double d )
+{
+    std::ostringstream stm ;
+    stm << std::setprecision(std::numeric_limits<double>::digits10) << d ;
+    return stm.str() ;
+}
+
 inline std::string ts(const double &n)
 {
     std::string s = std::to_string(n);
@@ -156,10 +163,12 @@ inline explicitPoint3D genericPointToExplicit(const genericPoint &p)
 
 inline std::string genericPointToString(const genericPoint &p)
 {
+    std::setprecision(std::numeric_limits<long double>::digits10 + 1);
+
     if(p.isExplicit3D())
     {
         explicitPoint3D ep = p.toExplicit3D();
-        return "(" + std::to_string(ep.X()) + ", " + std::to_string(ep.Y()) + ", " + std::to_string(ep.Z()) + ");\n";
+        return "(" + to_string_prec(ep.X()) + ", " + to_string_prec(ep.Y()) + ", " + to_string_prec(ep.Z()) + ");\n";
     }
     else if(p.isLPI())
     {
