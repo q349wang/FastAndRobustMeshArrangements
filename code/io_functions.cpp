@@ -99,7 +99,7 @@ inline void loadMultipleFilesWithVertFix(const std::vector<std::string> &files, 
     {
         cinolib::Trimesh<> tm(files[f_id].c_str());
 
-        fixCoincidentVertices(tm);
+        bool fix = fixCoincidentVertices(tm);
 
         uint off = static_cast<uint>(coords.size() / 3); // prev num verts
 
@@ -119,13 +119,23 @@ inline void loadMultipleFilesWithVertFix(const std::vector<std::string> &files, 
 
         for(uint t_id = 0; t_id < tm.num_polys(); t_id++)
             labels.push_back(f_id);
+
+        /////////////////////////////// JUST FOR DEBUG //////////////////////////////////
+        if(fix)
+        {
+            std::string fname = std::to_string(f_id+1) + ".obj";
+            tm.save(fname.c_str());
+            std::cerr << fname << " saved" << std::endl;
+        }
+        ///////////////////////////////////////////////////////////////////////////////
     }
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
-inline void fixCoincidentVertices(cinolib::Trimesh<> &m)
+inline bool fixCoincidentVertices(cinolib::Trimesh<> &m) // return true if the fix is applied
 {
+    bool res = false;
     m.vert_set_flag(cinolib::MARKED, false);
 
     cinolib::Octree o;
@@ -151,9 +161,13 @@ inline void fixCoincidentVertices(cinolib::Trimesh<> &m)
     for(uint v_id = 0; v_id < m.num_verts(); ++v_id)
     {
         if(m.vert_data(v_id).flags[cinolib::MARKED])
+        {
             m.vert(v_id) += m.vert_data(v_id).normal * r * 2.0;
+            res = true;
+        }
     }
 
+    return res;
 }
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -178,4 +192,146 @@ inline void save(const std::string &filename, std::vector<double> &coords, std::
     }
 }
 
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+inline void writeIMPL(const string &filename, const std::vector<genericPoint *> &verts, const std::vector<uint> &tris, const std::vector<std::bitset<NBIT> > &labels)
+{
+    setlocale(LC_NUMERIC, "en_US.UTF-8"); // makes sure "." is the decimal separator
+
+    FILE *fp = fopen(filename.c_str(), "w");
+
+    if(!fp)
+    {
+        std::cerr << "ERROR : " << __FILE__ << ", line " << __LINE__ << " : writeIMPL() : couldn't open input file " << filename << std::endl;
+        exit(-1);
+    }
+
+    fprintf(fp, "nv %d\n", static_cast<uint>(verts.size()));    // num verts
+    fprintf(fp, "nt %d\n", static_cast<uint>(tris.size() / 3)); // num triangles
+
+    std::map<std::tuple<double, double, double>, uint> v_map;
+
+    for(uint v_id = 0; v_id < verts.size(); v_id++)
+    {
+        if(verts[v_id]->isExplicit3D())
+        {
+            const explicitPoint3D &ev = verts[v_id]->toExplicit3D();
+            std::tuple<double,double,double> v(ev.X(), ev.Y(), ev.Z());
+            v_map[v] = v_id;
+
+            fprintf(fp, "e %.17g %.17g %.17g\n", std::get<0>(v), std::get<1>(v), std::get<2>(v));
+        }
+        else if(verts[v_id]->isLPI())
+        {
+            const explicitPoint3D &ep = verts[v_id]->toLPI().P();   std::tuple<double,double,double> tp(ep.X(), ep.Y(), ep.Z());
+            const explicitPoint3D &eq = verts[v_id]->toLPI().Q();   std::tuple<double,double,double> tq(eq.X(), eq.Y(), eq.Z());
+            const explicitPoint3D &er = verts[v_id]->toLPI().R();   std::tuple<double,double,double> tr(er.X(), er.Y(), er.Z());
+            const explicitPoint3D &es = verts[v_id]->toLPI().S();   std::tuple<double,double,double> ts(es.X(), es.Y(), es.Z());
+            const explicitPoint3D &et = verts[v_id]->toLPI().T();   std::tuple<double,double,double> tt(et.X(), et.Y(), et.Z());
+
+            uint id_p = v_map.find(tp)->second;     uint id_q = v_map.find(tq)->second;
+            uint id_r = v_map.find(tr)->second;     uint id_s = v_map.find(ts)->second;     uint id_t = v_map.find(tt)->second;
+
+            fprintf(fp, "l %d %d %d %d %d\n", id_p, id_q, id_r, id_s, id_t);
+        }
+        else if(verts[v_id]->isTPI())
+        {
+            const explicitPoint3D &eu1 = verts[v_id]->toTPI().U1();   std::tuple<double,double,double> tu1(eu1.X(), eu1.Y(), eu1.Z());
+            const explicitPoint3D &eu2 = verts[v_id]->toTPI().U2();   std::tuple<double,double,double> tu2(eu2.X(), eu2.Y(), eu2.Z());
+            const explicitPoint3D &eu3 = verts[v_id]->toTPI().U3();   std::tuple<double,double,double> tu3(eu3.X(), eu3.Y(), eu3.Z());
+            const explicitPoint3D &ev1 = verts[v_id]->toTPI().V1();   std::tuple<double,double,double> tv1(ev1.X(), ev1.Y(), ev1.Z());
+            const explicitPoint3D &ev2 = verts[v_id]->toTPI().V2();   std::tuple<double,double,double> tv2(ev2.X(), ev2.Y(), ev2.Z());
+            const explicitPoint3D &ev3 = verts[v_id]->toTPI().V3();   std::tuple<double,double,double> tv3(ev3.X(), ev3.Y(), ev3.Z());
+            const explicitPoint3D &ew1 = verts[v_id]->toTPI().W1();   std::tuple<double,double,double> tw1(ew1.X(), ew1.Y(), ew1.Z());
+            const explicitPoint3D &ew2 = verts[v_id]->toTPI().W2();   std::tuple<double,double,double> tw2(ew2.X(), ew2.Y(), ew2.Z());
+            const explicitPoint3D &ew3 = verts[v_id]->toTPI().W3();   std::tuple<double,double,double> tw3(ew3.X(), ew3.Y(), ew3.Z());
+
+            uint id_u1 = v_map.find(tu1)->second;   uint id_u2 = v_map.find(tu2)->second;   uint id_u3 = v_map.find(tu3)->second;
+            uint id_v1 = v_map.find(tv1)->second;   uint id_v2 = v_map.find(tv2)->second;   uint id_v3 = v_map.find(tv3)->second;
+            uint id_w1 = v_map.find(tw1)->second;   uint id_w2 = v_map.find(tw2)->second;   uint id_w3 = v_map.find(tw3)->second;
+
+            fprintf(fp, "t %d %d %d %d %d %d %d %d %d\n", id_u1, id_u2, id_u3, id_v1, id_v2, id_v3, id_w1, id_w2, id_w3);
+        }
+    }
+
+    for(uint t_id = 0; t_id < tris.size()/3; t_id++)
+    {
+        fprintf(fp, "f %d %d %d %lu\n", tris[3 * t_id], tris[3 * t_id +1], tris[3 * t_id +2], labels[t_id].to_ulong());
+    }
+
+    fclose(fp);
+}
+
+inline void readIMPL(const std::string &filename, std::vector<genericPoint*> &verts, std::vector<uint> &tris, std::vector<std::bitset<NBIT>> &labels)
+{
+    std::ifstream fp(filename);
+    if(!fp.is_open())
+    {
+        std::cerr << "ERROR : " << __FILE__ << ", line " << __LINE__ << " : readIMPL() : couldn't open input file " << filename << std::endl;
+        exit(-1);
+    }
+
+    uint curr_v_id = 0;
+    uint curr_t_id = 0;
+
+    std::string line;
+    while(std::getline(fp, line))
+    {
+        switch(line[0])
+        {
+            case 'e': // Explicit point
+            {
+                double x, y, z;
+                sscanf(line.data(), "e %lf %lf %lf", &x, &y, &z);
+                verts[curr_v_id++] = new explicitPoint3D(x, y, z);
+            } break;
+
+            case 'l': // LPI point
+            {
+                uint p, q, r, s, t;
+                sscanf(line.data(), "l %d %d %d %d %d", &p, &q, &r, &s, &t);
+                verts[curr_v_id++] = new implicitPoint3D_LPI(verts[p]->toExplicit3D(), verts[q]->toExplicit3D(),
+                                                             verts[r]->toExplicit3D(), verts[s]->toExplicit3D(), verts[t]->toExplicit3D());
+            } break;
+
+            case 't': // TPI point
+            {
+                uint u1, u2, u3, v1, v2, v3, w1, w2, w3;
+                sscanf(line.data(), "t %d %d %d %d %d %d %d %d %d", &u1, &u2, &u3, &v1, &v2, &v3, &w1, &w2, &w3);
+                verts[curr_v_id++] = new implicitPoint3D_TPI(verts[u1]->toExplicit3D(), verts[u2]->toExplicit3D(), verts[u3]->toExplicit3D(),
+                                                             verts[v1]->toExplicit3D(), verts[v2]->toExplicit3D(), verts[v3]->toExplicit3D(),
+                                                             verts[w1]->toExplicit3D(), verts[w2]->toExplicit3D(), verts[w3]->toExplicit3D());
+            } break;
+
+            case 'f': // Triangle
+            {
+                uint v0, v1, v2;
+                sscanf(line.data(), "f %d %d %d", &v0, &v1, &v2);
+                tris[curr_t_id++] = v0;
+                tris[curr_t_id++] = v1;
+                tris[curr_t_id++] = v2;
+            } break;
+
+            case 'n': // Preliminary info
+            {
+                uint size;
+                if(line[1] == 'v')
+                {
+                    sscanf(line.data(), "nv %d", &size);
+                    verts.clear();
+                    verts.resize(size);
+                }
+                else if(line[1] == 't')
+                {
+                    sscanf(line.data(), "nt %d", &size);
+                    tris.clear();
+                    labels.clear();
+                    tris.resize(size);
+                    labels.resize(size);
+                }
+            } break;
+        }
+    }
+
+    fp.close();
+}

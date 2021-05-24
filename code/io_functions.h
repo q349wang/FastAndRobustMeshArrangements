@@ -38,6 +38,8 @@
 #ifndef IO_FUNCTIONS_H
 #define IO_FUNCTIONS_H
 
+#include<implicit_point.h>
+
 #include <cinolib/vector_serialization.h>
 
 #include <cinolib/meshes/trimesh.h>
@@ -50,16 +52,22 @@
 #include <cinolib/io/write_OBJ.h>
 #include <cinolib/io/write_STL.h>
 
+#include <common.h>
+
+
 inline void load(const std::string &filename, std::vector<double> &coords, std::vector<uint> &tris);
 
 inline void loadMultipleFiles(const std::vector<std::string> &files, std::vector<double> &coords, std::vector<uint> &tris, std::vector<uint> &labels);
 
 inline void loadMultipleFilesWithVertFix(const std::vector<std::string> &files, std::vector<double> &coords, std::vector<uint> &tris, std::vector<uint> &labels);
 
-inline void fixCoincidentVertices(cinolib::Trimesh<> &m);
+inline bool fixCoincidentVertices(cinolib::Trimesh<> &m);
 
 inline void save(const std::string &filename, std::vector<double> &coords, std::vector<uint> &tris);
 
+inline void writeIMPL(const std::string &filename, const std::vector<genericPoint*> &verts, const std::vector<uint> &tris, const std::vector<std::bitset<NBIT>> &labels);
+
+inline void readIMPL(const std::string &filename, std::vector<genericPoint*> &verts, std::vector<uint> &tris, std::vector<std::bitset<NBIT>> &labels);
 
 #include "io_functions.cpp"
 
