@@ -207,10 +207,11 @@ inline void writeIMPL(const string &filename, const std::vector<genericPoint *> 
     }
 
     fprintf(fp, "nv %d\n", static_cast<uint>(verts.size()));    // num verts
-    fprintf(fp, "nt %d\n", static_cast<uint>(tris.size() / 3)); // num triangles
+    fprintf(fp, "nt %d\n", static_cast<uint>(tris.size() /3)); // num triangles
 
     std::map<std::tuple<double, double, double>, uint> v_map;
 
+    // explicit points map creation
     for(uint v_id = 0; v_id < verts.size(); v_id++)
     {
         if(verts[v_id]->isExplicit3D())
@@ -218,8 +219,15 @@ inline void writeIMPL(const string &filename, const std::vector<genericPoint *> 
             const explicitPoint3D &ev = verts[v_id]->toExplicit3D();
             std::tuple<double,double,double> v(ev.X(), ev.Y(), ev.Z());
             v_map[v] = v_id;
+        }
+    }
 
-            fprintf(fp, "e %.17g %.17g %.17g\n", std::get<0>(v), std::get<1>(v), std::get<2>(v));
+    for(uint v_id = 0; v_id < verts.size(); v_id++)
+    {
+        if(verts[v_id]->isExplicit3D())
+        {
+            const explicitPoint3D &ev = verts[v_id]->toExplicit3D();
+            fprintf(fp, "e %.17g %.17g %.17g\n", ev.X(), ev.Y(), ev.Z());
         }
         else if(verts[v_id]->isLPI())
         {
@@ -274,6 +282,8 @@ inline void readIMPL(const std::string &filename, std::vector<genericPoint*> &ve
     uint curr_v_id = 0;
     uint curr_t_id = 0;
 
+    std::vector<std::vector<uint>> impl_points; // v[0] -> pos vert, v[1]..v[n] verts id
+
     std::string line;
     while(std::getline(fp, line))
     {
@@ -290,26 +300,26 @@ inline void readIMPL(const std::string &filename, std::vector<genericPoint*> &ve
             {
                 uint p, q, r, s, t;
                 sscanf(line.data(), "l %d %d %d %d %d", &p, &q, &r, &s, &t);
-                verts[curr_v_id++] = new implicitPoint3D_LPI(verts[p]->toExplicit3D(), verts[q]->toExplicit3D(),
-                                                             verts[r]->toExplicit3D(), verts[s]->toExplicit3D(), verts[t]->toExplicit3D());
+                impl_points.push_back({curr_v_id++, p, q, r, s, t});
             } break;
 
             case 't': // TPI point
             {
                 uint u1, u2, u3, v1, v2, v3, w1, w2, w3;
                 sscanf(line.data(), "t %d %d %d %d %d %d %d %d %d", &u1, &u2, &u3, &v1, &v2, &v3, &w1, &w2, &w3);
-                verts[curr_v_id++] = new implicitPoint3D_TPI(verts[u1]->toExplicit3D(), verts[u2]->toExplicit3D(), verts[u3]->toExplicit3D(),
-                                                             verts[v1]->toExplicit3D(), verts[v2]->toExplicit3D(), verts[v3]->toExplicit3D(),
-                                                             verts[w1]->toExplicit3D(), verts[w2]->toExplicit3D(), verts[w3]->toExplicit3D());
+                impl_points.push_back({curr_v_id++, u1, u2, u3, v1, v2, v3, w1, w2, w3});
             } break;
 
             case 'f': // Triangle
             {
                 uint v0, v1, v2;
-                sscanf(line.data(), "f %d %d %d", &v0, &v1, &v2);
-                tris[curr_t_id++] = v0;
-                tris[curr_t_id++] = v1;
-                tris[curr_t_id++] = v2;
+                unsigned long int l;
+                sscanf(line.data(), "f %d %d %d %lu", &v0, &v1, &v2, &l);
+                tris[3 * curr_t_id] = v0;
+                tris[3 * curr_t_id +1] = v1;
+                tris[3 * curr_t_id +2] = v2;
+                labels[curr_t_id] = static_cast<ulong>(l);
+                curr_t_id++;
             } break;
 
             case 'n': // Preliminary info
@@ -326,12 +336,28 @@ inline void readIMPL(const std::string &filename, std::vector<genericPoint*> &ve
                     sscanf(line.data(), "nt %d", &size);
                     tris.clear();
                     labels.clear();
-                    tris.resize(size);
-                    labels.resize(size);
+                    tris.resize(3 * size);
+                    labels.resize(3 * size);
                 }
             } break;
         }
     }
 
     fp.close();
+
+    // parse implicit_points
+    for(auto &point : impl_points)
+    {
+        if(point.size() == 6) // LPI
+        {
+            verts[point[0]] = new implicitPoint3D_LPI(verts[point[1]]->toExplicit3D(), verts[point[2]]->toExplicit3D(),
+                                                      verts[point[3]]->toExplicit3D(), verts[point[4]]->toExplicit3D(), verts[point[5]]->toExplicit3D());
+        }
+        else // TPI
+        {
+            verts[point[0]] = new implicitPoint3D_TPI(verts[point[1]]->toExplicit3D(), verts[point[2]]->toExplicit3D(), verts[point[3]]->toExplicit3D(),
+                                                      verts[point[4]]->toExplicit3D(), verts[point[5]]->toExplicit3D(), verts[point[6]]->toExplicit3D(),
+                                                      verts[point[7]]->toExplicit3D(), verts[point[8]]->toExplicit3D(), verts[point[9]]->toExplicit3D());
+        }
+    }
 }
