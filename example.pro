@@ -6,6 +6,8 @@ CONFIG          += sdk_no_version_check
 
 DEFINES         += CINOLIB_USES_EXACT_PREDICATES
 DEFINES         += IS64BITPLATFORM
+DEFINES         += __LITTLE_ENDIAN__
+
 
 
 SOURCES         +=  main.cpp \

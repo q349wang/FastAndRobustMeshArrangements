@@ -5,3 +5,5 @@ external/Cinolib
 external/TMesh_Kernel
 build/
 *.pro.user
+
+test.bin

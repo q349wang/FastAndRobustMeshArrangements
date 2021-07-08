@@ -36,7 +36,9 @@
  * ***************************************************************************************/
 
 #include "io_functions.h"
+#include "bfstream.h"
 
+#include <cstdarg>
 
 inline void load(const std::string &filename, std::vector<double> &coords, std::vector<uint> &tris)
 {
@@ -46,13 +48,13 @@ inline void load(const std::string &filename, std::vector<double> &coords, std::
 
     if (filetype.compare(".off") == 0 || filetype.compare(".OFF") == 0)
     {
-        std::vector< std::vector<uint> > tmp_tris;
+        std::vector<std::vector<uint>> tmp_tris;
         cinolib::read_OFF(filename.c_str(), tmp_verts, tmp_tris);
         tris = cinolib::serialized_vids_from_polys(tmp_tris);
     }
     else if (filetype.compare(".obj") == 0 || filetype.compare(".OBJ") == 0)
     {
-        std::vector< std::vector<uint> > tmp_tris;
+        std::vector<std::vector<uint>> tmp_tris;
         cinolib::read_OBJ(filename.c_str(), tmp_verts, tmp_tris);
         tris = cinolib::serialized_vids_from_polys(tmp_tris);
     }
@@ -70,9 +72,51 @@ inline void load(const std::string &filename, std::vector<double> &coords, std::
 
 //:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+inline void loadEltopo(const std::string &filename, std::vector<double> &coords, std::vector<uint> &tris)
+{
+    const char* filename_format = filename.c_str();
+
+    bifstream infile( filename_format );
+    
+    assert( infile.good() );
+    
+    infile.read_endianity();
+    
+    double curr_t;
+
+    infile >> curr_t;
+    
+    unsigned int nverts;
+    infile >> nverts;
+    coords.resize( 3 * nverts );
+    for ( unsigned int i = 0; i < 3 * nverts; ++i )
+    {
+        infile >> coords[i];
+    }
+    
+    double ignore = 0.0;
+    for ( unsigned int i = 0; i < nverts; ++i )
+    {
+        infile >> ignore;
+    }
+    
+    unsigned int ntris;
+    infile >> ntris;
+    
+    tris.resize( 3 * ntris );
+    for ( unsigned int t = 0; t < 3 * ntris; ++t )
+    {
+        infile >> tris[t];
+    }
+    
+    infile.close();
+}
+
+//:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 inline void loadMultipleFiles(const std::vector<std::string> &files, std::vector<double> &coords, std::vector<uint> &tris, std::vector<uint> &labels)
 {
-    for(uint f_id = 0; f_id < files.size(); f_id++)
+    for (uint f_id = 0; f_id < files.size(); f_id++)
     {
         std::vector<double> tmp_coords;
         std::vector<uint> tmp_tris;
@@ -83,9 +127,10 @@ inline void loadMultipleFiles(const std::vector<std::string> &files, std::vector
 
         coords.insert(coords.end(), tmp_coords.begin(), tmp_coords.end());
 
-        for(auto &i : tmp_tris) tris.push_back(i + off);
+        for (auto &i : tmp_tris)
+            tris.push_back(i + off);
 
-        for(uint i = 0; i < tmp_tris.size() / 3; i++)
+        for (uint i = 0; i < tmp_tris.size() / 3; i++)
             labels.push_back(f_id);
     }
 }
@@ -96,7 +141,7 @@ inline void save(const std::string &filename, std::vector<double> &coords, std::
 {
     std::string filetype = filename.substr(filename.size() - 4, 4);
 
-    std::vector< std::vector<uint> > tmp_tris = cinolib::polys_from_serialized_vids(tris, 3);
+    std::vector<std::vector<uint>> tmp_tris = cinolib::polys_from_serialized_vids(tris, 3);
 
     if (filetype.compare(".off") == 0 || filetype.compare(".OFF") == 0)
     {
@@ -111,5 +156,3 @@ inline void save(const std::string &filename, std::vector<double> &coords, std::
         std::cerr << "ERROR: file format not supported yet " << std::endl;
     }
 }
-
-

@@ -50,6 +50,8 @@
 
 inline void load(const std::string &filename, std::vector<double> &coords, std::vector<uint> &tris);
 
+inline void loadEltopo(const std::string &filename, std::vector<double> &coords, std::vector<uint> &tris);
+
 inline void loadMultipleFiles(const std::vector<std::string> &files, std::vector<double> &coords, std::vector<uint> &tris, std::vector<uint> &labels);
 
 inline void save(const std::string &filename, std::vector<double> &coords, std::vector<uint> &tris);

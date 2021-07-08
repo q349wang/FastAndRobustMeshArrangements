@@ -58,7 +58,7 @@ int main(int argc, char **argv)
     std::vector<uint> in_tris, out_tris;
     std::vector<genericPoint*> gen_points;
 
-    load(filename, in_coords, in_tris);
+    loadEltopo(filename, in_coords, in_tris);
 
     /*-------------------------------------------------------------------
      * There are 4 versions of the solveIntersections function. Please
