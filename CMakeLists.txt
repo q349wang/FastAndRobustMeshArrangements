@@ -7,17 +7,8 @@ project(fastmesharrange)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-# add the executable
-#add_executable(${PROJECT_NAME} 
-#    main.cpp
-#    external/Cinolib/external/predicates/shewchuk.c
-#    external/IndirectPredicates/implicit_point.cpp
-#    external/IndirectPredicates/numerics.cpp
-#    external/IndirectPredicates/predicates/indirect_predicates.cpp
-#)
 
-add_library(${PROJECT_NAME} STATIC
-	solve_intersections.cpp
+add_library(${PROJECT_NAME} solve_intersections.cpp solve_intersections.h
 )
 
 # Compiler-specific options
@@ -41,6 +32,7 @@ endif()
 
 # Public include directory
 target_include_directories(${PROJECT_NAME} PUBLIC
+	./
 	code/
 	external/Cinolib/external/eigen/
 	external/Cinolib/include/
@@ -57,4 +49,13 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC
 	CINOLIB_USES_EXACT_PREDICATES
 	DATA_PATH="./data/"
 )
+
+# Generate position independent code
+set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+# Export interface symbols and hide internal implementation
+include(GenerateExportHeader)
+generate_export_header(${PROJECT_NAME})
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_BINARY_DIR})
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET hidden)
 
