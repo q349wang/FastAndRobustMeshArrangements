@@ -118,4 +118,6 @@ inline void solveIntersections(const std::vector<double> &in_coords, const std::
 inline void solveIntersections(const std::vector<double> &in_coords, const std::vector<uint> &in_tris, const std::vector<uint> &in_labels,
                                std::vector<genericPoint*> &vertices, std::vector<uint> &out_tris, std::vector< std::bitset<NBIT> > &out_labels);
 
+#include "solve_intersections.cpp"
+
 #endif // SOLVE_INTERSECTIONS_H
